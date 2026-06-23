@@ -22,7 +22,6 @@ src/
 ├── server/           # Hono routes, turn/board/faction services
 └── shared/           # Types, API contracts, validators, endgameLogic
 tests/                # Vitest unit + e2e (in-memory Devvit mock)
-docs/frontend-ui.md   # UI reference for humans + LLMs
 devvit.json           # App manifest, cron, menu items
 ```
 
