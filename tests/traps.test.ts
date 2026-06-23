@@ -175,4 +175,14 @@ describe('trap: devvit manifest', () => {
     const manifest = readFileSync(resolve('devvit.json'), 'utf8');
     expect(manifest).toContain('"height": "tall"');
   });
+
+  it('ships a 1024 marketing icon for app listing', () => {
+    const manifest = JSON.parse(readFileSync(resolve('devvit.json'), 'utf8')) as {
+      marketingAssets?: { icon?: string };
+    };
+    expect(manifest.marketingAssets?.icon).toBe('assets/icon.png');
+    const icon = readFileSync(resolve('assets/icon.png'));
+    expect(icon.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))).toBe(true);
+    expect(icon.length).toBeLessThan(500 * 1024);
+  });
 });

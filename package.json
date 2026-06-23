@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "verify:viewport": "node tools/verify-viewport.mjs",
     "verify:traps": "vitest run tests/traps.test.ts && node tools/verify-viewport.mjs",
+    "icon": "node tools/render-icon.mjs",
     "type-check": "tsc --build"
   },
   "engines": {
@@ -31,6 +32,7 @@
     "@types/node": "22.19.19",
     "@types/random-words": "^1.1.4",
     "devvit": "0.13.4",
+    "sharp": "^0.35.2",
     "typescript": "5.8.3",
     "vite": "6.3.6",
     "vitest": "^4.1.9"

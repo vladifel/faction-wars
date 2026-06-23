@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" aria-hidden="true">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#050014"/>
+      <stop offset="100%" stop-color="#1a0033"/>
+    </linearGradient>
+    <radialGradient id="centerGlow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FF00FF" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#050014" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="neonYellow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="neonOrange" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="neonCyan" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" rx="180" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="180" fill="url(#centerGlow)"/>
+
+  <g stroke="#00FFFF" stroke-width="2" opacity="0.25">
+    <line x1="0" y1="760" x2="1024" y2="760"/>
+    <line x1="0" y1="820" x2="1024" y2="820"/>
+    <line x1="0" y1="900" x2="1024" y2="900"/>
+    <path d="M512,760 L120,1024 M512,760 L320,1024 M512,760 L512,1024 M512,760 L704,1024 M512,760 L904,1024"/>
+  </g>
+
+  <g transform="translate(118 262) scale(3.55)">
+    <polygon points="50,5 95,25 95,75 50,95 5,75 5,25" fill="#0A0A0A" stroke="#00FFFF" stroke-width="3" filter="url(#neonCyan)"/>
+    <path d="M25,80 Q15,40 40,20 Q65,30 75,70 Q50,95 25,80 Z" fill="none" stroke="#FAED27" stroke-width="4" filter="url(#neonYellow)"/>
+    <rect x="42" y="35" width="28" height="8" rx="2" fill="#00FFFF" stroke="#FFFFFF" stroke-width="1"/>
+  </g>
+
+  <g transform="translate(548 262) scale(3.55)">
+    <polygon points="50,5 95,25 95,75 50,95 5,75 5,25" fill="#0A0A0A" stroke="#FF00FF" stroke-width="3"/>
+    <circle cx="50" cy="50" r="28" fill="none" stroke="#FF5500" stroke-width="4" filter="url(#neonOrange)"/>
+    <circle cx="50" cy="45" r="7" fill="#FF0055" stroke="#FFFFFF" stroke-width="1"/>
+    <line x1="32" y1="45" x2="43" y2="45" stroke="#FF0055" stroke-width="2"/>
+    <line x1="57" y1="45" x2="68" y2="45" stroke="#FF0055" stroke-width="2"/>
+  </g>
+
+  <path d="M512 250 L512 774" stroke="#FF0055" stroke-width="4" stroke-dasharray="14 10" opacity="0.55" filter="url(#neonCyan)"/>
+</svg>
