@@ -48,15 +48,19 @@ describe('trap: fluid viewport packing (no hardcoded tile px)', () => {
 });
 
 describe('trap: compact stacked HUD (no overlay on tiles)', () => {
-  it('top bar is flex row; clue is floating HUD (not stacked strip)', () => {
-    expect(css).toMatch(/\.warroom__stage[\s\S]*min-height:\s*0/);
-    expect(css).toMatch(/\.pop-clue[\s\S]*position:\s*absolute/);
+  it('top bar is single row; clue sits between faction badges', () => {
+    expect(css).toMatch(/\.warroom__hud[\s\S]*justify-content:\s*space-between/);
+    expect(css).toMatch(/\.pop-clue--inline/);
+    expect(warroomTs).toContain('warroom__hud-center');
+    expect(warroomTs).toContain('warroom__hud-right');
     expect(warroomTs).toContain('popClueHud');
+    expect(warroomTs).toContain('pop-clue--inline');
     expect(warroomTs).toContain('CLUE');
     expect(css).not.toMatch(/\.hud-overlay/);
   });
 
-  it('command button lives in top bar, not floating over grid', () => {
+  it('command button lives in hud right cluster, not floating over grid', () => {
+    expect(warroomTs).toContain('warroom__hud-right');
     expect(warroomTs).toContain('popIconBtn');
     expect(uiTs).toContain('bar-cmd');
     expect(mainTs).not.toContain('command-fab');

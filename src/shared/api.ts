@@ -37,9 +37,20 @@ export interface ClientSession {
   isCommander: boolean;
   /** True when the viewer's faction is the one to move this turn. */
   isActiveFaction: boolean;
+  /** Tile the viewer voted for this turn, when logged in and already voted. */
+  myVoteTileId?: string | null;
   loggedIn: boolean;
   /** Cross-season record for logged-in users. */
   playerStats?: PlayerStatsSummary;
+  /** True under `devvit playtest` — enables solo-test UI affordances. */
+  devPlaytest?: boolean;
+}
+
+export interface NewGameResponse {
+  ok: boolean;
+  postId?: string;
+  navigateTo?: string;
+  error?: string;
 }
 
 export interface VoteRequest {
@@ -51,6 +62,8 @@ export interface VoteResponse {
   voteCount?: number;
   /** Refreshed snapshot so the client can reconcile immediately. */
   snapshot?: BoardSnapshot | null;
+  /** Confirmed vote target for this turn (present on success). */
+  myVoteTileId?: string | null;
   error?: string;
 }
 
@@ -99,6 +112,8 @@ export interface StateResponse {
   nextPostId?: string;
   /** Same as snapshot.livePostId when resolved and behind the live turn. */
   livePostId?: string;
+  /** Tile the viewer voted for this turn, when logged in and already voted. */
+  myVoteTileId?: string | null;
 }
 
 /** `GET /api/retry-target` — where RETRY should navigate after endgame. */

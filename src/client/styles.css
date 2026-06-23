@@ -497,8 +497,10 @@ body {
   position: relative;
   flex: 1;
   max-width: none;
-  padding: 10px;
+  min-height: 0;
+  padding: var(--pop-space-xs) var(--pop-space-sm);
   gap: var(--pop-space-sm);
+  overflow: hidden;
 }
 .warroom__body {
   flex: 1;
@@ -507,13 +509,53 @@ body {
   flex-direction: column;
   gap: var(--pop-space-sm);
 }
+.warroom__hud {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+.warroom__hud-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.warroom__hud-clock {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.warroom__hud-right {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+.warroom__hud > .pop-badge {
+  flex-shrink: 0;
+}
 .warroom__bar,
 .pop-bar {
   flex-shrink: 0;
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
   width: 100%;
+  min-width: 0;
+}
+.pop-bar__new-game {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .pop-bar__center {
   flex: 1;
@@ -526,15 +568,16 @@ body {
 .pop-bar__time {
   color: var(--nano-phosphor);
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
   text-transform: uppercase;
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.65);
+  white-space: nowrap;
 }
 .pop-bar__meta {
   color: var(--nano-phosphor);
   font-weight: 700;
-  font-size: 9px;
+  font-size: 8px;
   text-transform: uppercase;
   opacity: 0.7;
   white-space: nowrap;
@@ -561,6 +604,7 @@ body {
 .warroom__stage {
   flex: 1;
   min-height: 0;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -577,25 +621,34 @@ body {
   grid-template-rows: repeat(5, minmax(0, 1fr));
   gap: 5px;
 }
+.pop-board--locked {
+  cursor: not-allowed;
+}
 
-/* Floating clue HUD */
+/* Clue chip — inline in score row between factions. */
 .pop-clue {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
   display: flex;
   align-items: center;
-  gap: var(--pop-space-sm);
-  max-width: calc(100% - 24px);
-  padding: var(--pop-space-sm) 14px;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 8px;
   background: rgba(17, 17, 17, 0.92);
   color: var(--nano-phosphor);
   border: 2px solid var(--nano-phosphor);
   border-radius: var(--pop-radius-sm);
   box-shadow: 0 0 16px rgba(0, 255, 255, 0.35);
   pointer-events: none;
+}
+.pop-clue--inline {
+  flex: 0 1 auto;
+  max-width: min(36vw, 160px);
+  justify-content: center;
+}
+.pop-clue--inline .pop-clue__word {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .pop-clue__label {
   font-size: 9px;
@@ -662,6 +715,9 @@ button.grid-tile {
 .grid-tile--flipped {
   cursor: not-allowed;
 }
+button.grid-tile:disabled {
+  pointer-events: auto;
+}
 
 /* Pending / voting — dashed neon ring (glow sputters via .border-glow) */
 .grid-tile--pending {
@@ -673,6 +729,12 @@ button.grid-tile {
 }
 .grid-tile--voted.grid-tile--open {
   border-color: transparent;
+  cursor: not-allowed;
+}
+
+.grid-tile--locked.grid-tile--open {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 /* Flipped — dark face, faction hue drives .border-glow via currentColor */

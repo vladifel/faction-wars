@@ -18,10 +18,8 @@
     "redis": true,
     "realtime": true,
     "http": {
-      "fetch": {
-        "enabled": true,
-        "domains": ["api.datamuse.com"]
-      }
+      "enable": true,
+      "domains": ["api.datamuse.com"]
     },
     "reddit": {
       "enable": true,

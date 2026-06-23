@@ -59,7 +59,7 @@ export async function castVote(input: VoteInput): Promise<VoteResult> {
   }
 
   // Mark voted first so a duplicate concurrent request cannot double-count.
-  await redis.hSet(votedKey, { [userId]: '1' });
+  await redis.hSet(votedKey, { [userId]: tileId });
   await redis.expire(votedKey, EPHEMERAL_TTL_SECONDS);
 
   let newCount: number | undefined;
@@ -75,6 +75,18 @@ export async function castVote(input: VoteInput): Promise<VoteResult> {
   await incrFunnel(subredditId, 'vote_cast');
 
   return { success: true, voteCount: newCount };
+}
+
+/** Which tile the viewer locked in this turn, if any. */
+export async function getMyVoteTileId(
+  season: string,
+  turn: number,
+  userId: string | undefined,
+): Promise<string | null> {
+  if (!userId) return null;
+  const raw = await redis.hGet(keys.hasVoted(season, turn), userId);
+  if (!raw || raw === '1') return null;
+  return raw;
 }
 
 export interface ClueInput {

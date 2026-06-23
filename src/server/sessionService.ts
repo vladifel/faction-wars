@@ -22,6 +22,7 @@ import {
 import { EPHEMERAL_TTL_SECONDS, keys } from './keys';
 import { incrFunnel } from './metricsService';
 import { readSnapshot } from './snapshotService';
+import { getMyVoteTileId } from './voteService';
 import { ensureTurnFresh, type SpawnNextPost } from './turnService';
 import { getPlayerStatsSummary } from './statsService';
 
@@ -152,6 +153,7 @@ export async function buildSessionBundle(
     await incrFunnel(subredditId, 'post_view');
 
     const playerStats = await getPlayerStatsSummary(userId);
+    const myVoteTileId = await getMyVoteTileId(binding.season, binding.turn, userId);
 
     return {
       ok: true,
@@ -167,8 +169,10 @@ export async function buildSessionBundle(
       factionPopulation,
       isCommander,
       isActiveFaction,
+      myVoteTileId,
       loggedIn: !!userId,
       playerStats,
+      devPlaytest: isDevPlaytest(),
     };
   } catch (err) {
     return {

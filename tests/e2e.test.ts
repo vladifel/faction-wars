@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { __test, context } from './mocks/devvitServer';
 import { api } from '../src/server/routes/api';
 import { getPrivateBoard } from '../src/server/boardService';
-import type { ClientSession, VoteResponse, ClueResponse, ClaimCommanderResponse, StateResponse, VetoResponse, CommanderXrayResponse } from '../src/shared/api';
+import type { ClientSession, VoteResponse, ClueResponse, ClaimCommanderResponse, StateResponse, VetoResponse, CommanderXrayResponse, NewGameResponse } from '../src/shared/api';
 import type { SolutionTile, VisualFaction } from '../src/shared/types';
 import { clueConflictsWithBoard } from '../src/shared/validators';
 
@@ -142,10 +142,21 @@ describe('full game flow over /api', () => {
     const s = await get<ClientSession>('/init');
     expect(s.isActiveFaction).toBe(true);
     expect(s.trusted).toBe(true);
+    expect(s.devPlaytest).toBe(true);
 
     const priv = (await getPrivateBoard(SEASON))!;
     const vote = await post<VoteResponse>('/vote', { tileId: neutralTile(priv.solution) });
     expect(vote.body.success).toBe(true);
+  });
+
+  it('playtest new-game spawns a fresh war room post', async () => {
+    context.appVersion = '0.0.1.8';
+    asUser('t2_solo');
+    const res = await post<NewGameResponse>('/new-game');
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.postId).toBeTruthy();
+    expect(res.body.navigateTo).toContain('playtest=faction-warfare');
   });
 
   it('rejects invalid clues with 400', async () => {

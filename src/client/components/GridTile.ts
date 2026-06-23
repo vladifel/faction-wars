@@ -13,6 +13,8 @@ export interface GridTileProps {
   voteTeamColor: string;
   canVote: boolean;
   voted: boolean;
+  /** Turn vote already cast — board is read-only until next turn. */
+  locked?: boolean;
   /** Tile awaiting vote confirmation in the action sheet. */
   pending?: boolean;
   /** Tile index for one-shot deal-in animation (0–24). */
@@ -24,15 +26,17 @@ export interface GridTileProps {
 
 /** Render one board cell. */
 export function renderGridTile(props: GridTileProps): HTMLElement {
-  const { tile, voteTeamColor, canVote, voted, pending, tileIndex, glowLive, onSelect } = props;
+  const { tile, voteTeamColor, canVote, voted, locked, pending, tileIndex, glowLive, onSelect } = props;
   const flipped = tile.isFlipped;
   const role = tile.revealedRole as TileRole | undefined;
+  const interactive = canVote && !flipped && !voted && !locked;
 
   const classes = ['grid-tile'];
   if (!flipped) classes.push('grid-tile--open');
   if (flipped) classes.push('grid-tile--flipped');
   if (pending) classes.push('grid-tile--pending');
   if (voted) classes.push('grid-tile--voted');
+  if (locked && !voted) classes.push('grid-tile--locked');
 
   const styleParts: string[] = [];
   if (voted || tile.voteCount > 0 || pending) {
@@ -45,13 +49,14 @@ export function renderGridTile(props: GridTileProps): HTMLElement {
 
   const root = el('button', {
     type: 'button',
-    disabled: !canVote || flipped,
+    disabled: !interactive,
     class: classes.join(' '),
     'data-tile-id': tile.id,
     ...(flipped && role ? { 'data-role': role } : {}),
+    ...(voted ? { 'aria-label': `${tile.word}, your vote` } : {}),
     style: styleParts.length ? styleParts.join(';') : undefined,
     onclick: () => {
-      if (!canVote || flipped) return;
+      if (!interactive) return;
       onSelect();
     },
   });
@@ -69,8 +74,12 @@ export function renderGridTile(props: GridTileProps): HTMLElement {
       : el('span', { class: 'grid-tile__word text-static' }, [tile.word]),
   );
 
-  if (tile.voteCount > 0 && !flipped) {
-    root.append(el('span', { class: 'grid-tile__votes' }, [String(tile.voteCount)]));
+  if ((tile.voteCount > 0 || voted) && !flipped) {
+    root.append(
+      el('span', { class: 'grid-tile__votes' }, [
+        String(voted && tile.voteCount === 0 ? 1 : tile.voteCount),
+      ]),
+    );
   }
 
   return root;

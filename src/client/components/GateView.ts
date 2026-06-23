@@ -23,6 +23,7 @@ export interface GateViewProps {
   snap: BoardSnapshot;
   theme: ThemeTokens;
   onEnter: () => void;
+  onNewGame?: () => void;
 }
 
 function renderGateTitle(theme: ThemeTokens): HTMLElement {
@@ -38,8 +39,24 @@ function renderGateTitle(theme: ThemeTokens): HTMLElement {
 
 /** First-screen arcade cabinet gate. */
 export function renderGateView(props: GateViewProps): HTMLElement {
-  const { session, snap, theme, onEnter } = props;
+  const { session, snap, theme, onEnter, onNewGame } = props;
   const faction = session.visualFaction;
+
+  const actions = [
+    popBtn(theme.labels.enterCta.toUpperCase(), {
+      variant: 'primary',
+      className: 'pop-btn--cta pop-btn--arcade',
+      onclick: onEnter,
+    }),
+  ];
+  if (session.devPlaytest && onNewGame) {
+    actions.push(
+      popBtn('START NEW GAME', {
+        variant: 'secondary',
+        onclick: onNewGame,
+      }),
+    );
+  }
 
   return popScreen('sky', [
     popStack([
@@ -62,11 +79,7 @@ export function renderGateView(props: GateViewProps): HTMLElement {
           : 'Log in to Reddit to enlist and cast your vote.',
         'pop-body--center',
       ),
-      popBtn(theme.labels.enterCta.toUpperCase(), {
-        variant: 'primary',
-        className: 'pop-btn--cta pop-btn--arcade',
-        onclick: onEnter,
-      }),
+      ...actions,
       session.trusted
         ? popBody(`${session.factionPopulation} ALLIES DEPLOYED`, 'pop-body--meta')
         : popBody('NEW ACCOUNT — OBSERVE ONLY UNTIL TRUST EARNED', 'pop-body--warn'),

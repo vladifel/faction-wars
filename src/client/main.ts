@@ -180,6 +180,25 @@ function postUrl(postId: string): string {
 
 
 
+async function startNewGame(): Promise<void> {
+  if (state.busy) return;
+  state.busy = true;
+  render();
+  try {
+    const res = await fwApi.newGame();
+    if (res.ok && res.navigateTo) {
+      navigateTo(res.navigateTo);
+      return;
+    }
+    flash(res.error ?? 'Could not start a new game.');
+  } catch {
+    flash('Could not start a new game.');
+  } finally {
+    state.busy = false;
+    render();
+  }
+}
+
 async function openCommanderConsole(): Promise<void> {
 
   state.route = 'COMMANDER_CONSOLE';
@@ -346,10 +365,12 @@ function renderWarroomIfMounted(): void {
       boardDeal: state.boardDeal,
       flickerTileIds: state.flickerTileIds,
       onTileSelect: (tile) => {
+        if (state.votedTileId || state.busy) return;
         state.pendingTile = tile;
         render();
       },
       onCommandOpen: () => void openCommanderConsole(),
+      onNewGame: state.session?.devPlaytest ? () => void startNewGame() : undefined,
     }),
   );
   syncBorderGlowLive(state.flickerTileIds);
@@ -358,6 +379,10 @@ function renderWarroomIfMounted(): void {
 function syncActionSheet(): void {
   const session = state.session;
   const snap = state.snapshot;
+  if (state.votedTileId && !state.pendingTile) {
+    removeVoteSheet();
+    return;
+  }
   if (!session || !snap || !state.pendingTile) {
     removeVoteSheet();
     return;
@@ -413,6 +438,8 @@ async function confirmVeto(): Promise<void> {
 
 
 function render(): void {
+  patchSnapshotForMyVote();
+
   const session = state.session;
   const snap = state.snapshot;
   const warroomPending =
@@ -438,6 +465,7 @@ function render(): void {
           render();
         },
         onCommandOpen: () => void openCommanderConsole(),
+        onNewGame: session!.devPlaytest ? () => void startNewGame() : undefined,
       }),
     );
     return;
@@ -511,6 +539,7 @@ function render(): void {
           refreshTileFlicker();
           render();
         },
+        onNewGame: () => void startNewGame(),
       }),
     );
     return;
@@ -554,10 +583,12 @@ function render(): void {
       boardDeal: state.boardDeal,
       flickerTileIds: state.flickerTileIds,
       onTileSelect: (tile) => {
+        if (state.votedTileId || state.busy) return;
         state.pendingTile = tile;
         render();
       },
       onCommandOpen: () => void openCommanderConsole(),
+      onNewGame: session.devPlaytest ? () => void startNewGame() : undefined,
     }),
   );
 }
@@ -566,7 +597,12 @@ function render(): void {
 
 async function onVote(tileId: string): Promise<void> {
 
-  if (state.busy || state.votedTileId) return;
+  if (state.busy) return;
+
+  if (state.votedTileId) {
+    flash('You already voted this turn.');
+    return;
+  }
 
   state.busy = true;
 
@@ -580,21 +616,53 @@ async function onVote(tileId: string): Promise<void> {
 
   }
 
+  patchSnapshotForMyVote();
+
   render();
 
   try {
 
     const res = await fwApi.vote(tileId);
 
-    if (res.snapshot) state.snapshot = res.snapshot;
+    if (res.snapshot) applySnapshot(res.snapshot);
 
-    if (!res.success) state.votedTileId = null;
+    if (res.myVoteTileId) {
+
+      state.votedTileId = res.myVoteTileId;
+
+    } else if (res.success) {
+
+      state.votedTileId = tileId;
+
+    } else {
+
+      await refreshState();
+
+      if (!state.votedTileId) {
+
+        revertOptimisticVote(tileId);
+
+        if (res.error) flash(res.error);
+
+      }
+
+    }
 
   } catch {
 
-    state.votedTileId = null;
+    await refreshState();
+
+    if (!state.votedTileId) {
+
+      revertOptimisticVote(tileId);
+
+      flash('Vote failed — try again.');
+
+    }
 
   } finally {
+
+    patchSnapshotForMyVote();
 
     state.busy = false;
 
@@ -722,27 +790,80 @@ async function refreshState(): Promise<void> {
 
     const res = await fwApi.state();
 
-    if (res.snapshot) {
+    const voteSynced = syncMyVote(res.myVoteTileId);
 
-      const changed = res.snapshot.versionHash !== state.snapshot?.versionHash;
+    const snapChanged = res.snapshot ? applySnapshot(res.snapshot) : false;
 
-      if (state.snapshot && res.snapshot.turn !== state.snapshot.turn) {
+    patchSnapshotForMyVote();
 
-        state.votedTileId = null;
-
-      }
-
-      state.snapshot = res.snapshot;
-
-      if (changed) render();
-
-    }
+    if (snapChanged || voteSynced) render();
 
   } catch {
 
     /* transient; next tick retries */
 
   }
+
+}
+
+
+
+/** Keep client vote ring aligned with server-side has_voted. Returns true when changed. */
+function syncMyVote(tileId: string | null | undefined): boolean {
+
+  if (!tileId || tileId === state.votedTileId) return false;
+
+  state.votedTileId = tileId;
+
+  return true;
+
+}
+
+
+
+/** Ensure my locked vote stays visible even when snapshot counts lag. */
+function patchSnapshotForMyVote(): void {
+
+  if (!state.votedTileId || !state.snapshot) return;
+
+  const tile = state.snapshot.tiles.find((t) => t.id === state.votedTileId);
+
+  if (tile && !tile.isFlipped && tile.voteCount < 1) tile.voteCount = 1;
+
+}
+
+
+
+function revertOptimisticVote(tileId: string): void {
+
+  if (!state.snapshot) return;
+
+  const tile = state.snapshot.tiles.find((t) => t.id === tileId);
+
+  if (tile && tile.voteCount > 0) tile.voteCount -= 1;
+
+}
+
+
+
+/** Apply a server snapshot; skip stale or duplicate frames. Returns true when UI should refresh. */
+function applySnapshot(incoming: BoardSnapshot): boolean {
+
+  const prev = state.snapshot;
+
+  if (prev) {
+
+    if (incoming.versionHash === prev.versionHash) return false;
+
+    if (incoming.compiledAt < prev.compiledAt) return false;
+
+    if (incoming.turn !== prev.turn) state.votedTileId = null;
+
+  }
+
+  state.snapshot = incoming;
+
+  return !prev || incoming.versionHash !== prev.versionHash;
 
 }
 
@@ -799,21 +920,17 @@ function subscribeRealtime(): void {
 
       if (msg.snapshot) {
 
-        if (state.snapshot && msg.snapshot.turn !== state.snapshot.turn) {
+        if (applySnapshot(msg.snapshot)) {
 
-          state.votedTileId = null;
+          patchSnapshotForMyVote();
+
+          render();
 
         }
 
-        if (msg.snapshot.versionHash === state.snapshot?.versionHash) return;
-
-        state.snapshot = msg.snapshot;
-
-        render();
-
       } else {
 
-        refreshState();
+        void refreshState();
 
       }
 
@@ -836,6 +953,8 @@ async function boot(): Promise<void> {
     state.session = session;
 
     state.snapshot = session.snapshot;
+
+    syncMyVote(session.myVoteTileId);
 
     state.theme = resolveThemeTokens(session.config);
 

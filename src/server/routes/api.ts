@@ -13,6 +13,7 @@ import type {
   ClientSession,
   ClueRequest,
   ClueResponse,
+  NewGameResponse,
   RetryTargetResponse,
   StateResponse,
   VetoResponse,
@@ -29,19 +30,20 @@ import {
   visualFactionFor,
 } from '../factionService';
 import { keys } from '../keys';
-import { spawnNextPost as spawnNextPostImpl } from '../post';
+import { spawnNextPost as spawnNextPostImpl, createPost } from '../post';
 import { isDevPlaytest } from '../devMode';
 import { redis } from '@devvit/web/server';
 import { buildSessionBundle, claimCommander, getCommander } from '../sessionService';
 import { resolveRetryNavigateUrl } from '../livePostService';
 import { compileSnapshot, readSnapshot } from '../snapshotService';
+import { broadcastUpdate } from '../realtimeService';
 import {
   ensureTurnFresh,
   registerVetoStrike,
   resolveAndAdvance,
   type SpawnNextPost,
 } from '../turnService';
-import { castVote, dispatchClue, getActiveClue, vetoClue } from '../voteService';
+import { castVote, dispatchClue, getActiveClue, getMyVoteTileId, vetoClue } from '../voteService';
 import {
   addLoreWord,
   listLoreWords,
@@ -117,18 +119,48 @@ api.get('/retry-target', async (c) => {
   return c.json<RetryTargetResponse>({ ok: true, ...resolved }, 200);
 });
 
+/** POST /api/new-game - spawn a fresh war-room post (playtest or moderator). */
+api.post('/new-game', async (c) => {
+  const subredditId = context.subredditId;
+  const subredditName = context.subredditName ?? 'all';
+  if (!subredditId) {
+    return c.json<NewGameResponse>({ ok: false, error: 'No subreddit context.' }, 400);
+  }
+
+  const mod = await requireModerator();
+  if (!isDevPlaytest() && !mod.ok) {
+    return c.json<NewGameResponse>(
+      { ok: false, error: mod.error ?? 'Moderator access only.' },
+      mod.error === 'Not logged in.' ? 401 : 403,
+    );
+  }
+
+  try {
+    const post = await createPost(subredditId);
+    const slug = post.id.replace(/^t3_/, '');
+    const base = `https://www.reddit.com/r/${subredditName}/comments/${slug}/`;
+    const navigateTo = isDevPlaytest() ? `${base}?playtest=faction-warfare` : base;
+    return c.json<NewGameResponse>({ ok: true, postId: post.id, navigateTo }, 200);
+  } catch (err) {
+    console.error(`Failed to create war room: ${err}`);
+    return c.json<NewGameResponse>({ ok: false, error: 'Failed to create a new war room.' }, 500);
+  }
+});
+
 /** GET /api/state - cheap re-poll fallback (realtime safety net). */
 api.get('/state', async (c) => {
   const b = await loadBinding();
   if (!b) return c.json<StateResponse>({ snapshot: null, status: 'ACTIVE' }, 200);
   const board = await getPublicBoard(b.season, b.turn);
-  const snapshot = await readSnapshot({ season: b.season, turn: b.turn });
+  const snapshot = await readSnapshot({ season: b.season, turn: b.turn, maxAgeMs: 0 });
+  const myVoteTileId = await getMyVoteTileId(b.season, b.turn, b.userId);
   return c.json<StateResponse>(
     {
       snapshot,
       status: board?.status ?? 'ACTIVE',
       nextPostId: board?.nextPostId,
       livePostId: snapshot?.livePostId,
+      myVoteTileId,
     },
     200,
   );
@@ -208,10 +240,20 @@ api.post('/vote', async (c) => {
   }
 
   const snapshot = await compileSnapshot({ season: b.season, turn: b.turn });
+  const myVoteTileId = await getMyVoteTileId(b.season, b.turn, b.userId);
+  if (result.success && snapshot && b.postId) {
+    await broadcastUpdate(b.postId, {
+      type: 'snapshot',
+      turn: b.turn,
+      versionHash: snapshot.versionHash,
+      snapshot,
+    });
+  }
   return c.json<VoteResponse>({
     success: result.success,
     voteCount: result.voteCount,
     snapshot,
+    myVoteTileId,
     error: result.error,
   });
 });
