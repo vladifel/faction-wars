@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preview — War Room</title>
+    <link rel="stylesheet" href="../../src/client/styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <div class="screen warroom">
+        <header class="hud">
+          <div class="score score--red">
+            <span class="score__label">Red Faction</span>
+            <span class="score__value">7</span>
+            <span class="score__tiles">tiles left</span>
+          </div>
+          <div class="hud__center">
+            <div class="hud__clock">14:32</div>
+            <div class="hud__turn">Turn 4</div>
+            <div class="hud__pill hud__pill--go">Blue Faction — YOUR MOVE</div>
+          </div>
+          <div class="score score--blue score--active">
+            <span class="score__label">Blue Faction</span>
+            <span class="score__value">6</span>
+            <span class="score__tiles">tiles left</span>
+          </div>
+        </header>
+
+        <div class="ticker">
+          <span class="ticker__text">
+            Blue commander dispatched a clue · Red vetoed last turn · 41 votes cast this round
+          </span>
+        </div>
+
+        <div class="clue" style="--clue:#0079D3">
+          <span class="clue__label">ACTIVE CLUE</span>
+          <span class="clue__word">OCEAN</span>
+          <span class="clue__count">× 3</span>
+        </div>
+
+        <div class="board" id="board"></div>
+
+        <div class="commandbar">
+          <div class="console">
+            <span class="console__title">COMMANDER CONSOLE</span>
+            <div class="console__row">
+              <input class="field" type="text" placeholder="CLUE WORD" />
+              <input class="field field--num" type="number" value="1" />
+              <button class="btn btn--primary">Dispatch</button>
+            </div>
+          </div>
+          <button class="btn btn--ghost">Veto clue</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Mock tiles mirroring PublicTile + heatmapFace/colorForRole math (blue active).
+      const ROLE = { red: '#FF4500', blue: '#0079D3', neutral: '#878A8C', assassin: '#000000' };
+      const UNFLIPPED = '#272729';
+      function hexRgb(h) {
+        const i = parseInt(h.slice(1), 16);
+        return { r: (i >> 16) & 255, g: (i >> 8) & 255, b: i & 255 };
+      }
+      function blend(base, over, t) {
+        const a = hexRgb(base), b = hexRgb(over), k = Math.max(0, Math.min(1, t));
+        const to = (n) => Math.round(n).toString(16).padStart(2, '0');
+        return `#${to(a.r + (b.r - a.r) * k)}${to(a.g + (b.g - a.g) * k)}${to(a.b + (b.b - a.b) * k)}`;
+      }
+      function heat(votes) {
+        if (votes <= 0) return UNFLIPPED;
+        return blend(UNFLIPPED, ROLE.blue, Math.min(0.55, 0.15 + votes * 0.04));
+      }
+      // word, flippedRole(null=open), votes
+      const tiles = [
+        ['MERCURY', null, 0], ['ATLAS', 'blue', 0], ['NOVA', null, 4], ['ORBIT', null, 0], ['RIVER', 'neutral', 0],
+        ['EMBER', null, 7], ['CIPHER', null, 0], ['VAULT', 'red', 0], ['DELTA', null, 2], ['PRISM', null, 0],
+        ['ANCHOR', null, 0], ['GLACIER', 'blue', 0], ['RAVEN', null, 9], ['QUARTZ', null, 0], ['TEMPO', null, 1],
+        ['HOLLOW', 'neutral', 0], ['ZENITH', null, 0], ['MIRAGE', null, 3], ['BASALT', null, 0], ['SIGNAL', 'red', 0],
+        ['VECTOR', null, 0], ['OMEN', 'assassin', 0], ['HARBOR', null, 5], ['LUMEN', null, 0], ['STRATA', null, 0],
+      ];
+      const board = document.getElementById('board');
+      for (const [word, role, votes] of tiles) {
+        const flipped = !!role;
+        const bg = flipped ? ROLE[role] : heat(votes);
+        const btn = document.createElement('button');
+        btn.className = `tile ${flipped ? 'tile--flipped tile--' + role : 'tile--open'}`;
+        btn.style.setProperty('--tile-bg', bg);
+        if (flipped) btn.disabled = true;
+        const w = document.createElement('span');
+        w.className = 'tile__word';
+        w.textContent = word;
+        btn.append(w);
+        if (votes > 0 && !flipped) {
+          const v = document.createElement('span');
+          v.className = 'tile__votes';
+          v.textContent = String(votes);
+          btn.append(v);
+        }
+        board.append(btn);
+      }
+    </script>
+  </body>
+</html>

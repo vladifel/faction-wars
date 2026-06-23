@@ -1,0 +1,38 @@
+{
+  "name": "faction-warfare",
+  "version": "0.0.1",
+  "description": "Faction Warfare - an asynchronous, massively-multiplayer Codenames-style tactical voting game for Reddit, built on Devvit Web.",
+  "license": "BSD-3-Clause",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "devvit playtest",
+    "deploy": "npm run type-check && devvit upload",
+    "launch": "npm run deploy && devvit publish",
+    "login": "devvit login",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify:viewport": "node tools/verify-viewport.mjs",
+    "verify:traps": "vitest run tests/traps.test.ts && node tools/verify-viewport.mjs",
+    "type-check": "tsc --build"
+  },
+  "engines": {
+    "node": ">=22.2.0"
+  },
+  "dependencies": {
+    "@devvit/web": "0.13.4",
+    "@hono/node-server": "2.0.5",
+    "hono": "4.12.26",
+    "random-words": "^2.0.1"
+  },
+  "devDependencies": {
+    "@devvit/start": "0.13.4",
+    "@types/node": "22.19.19",
+    "@types/random-words": "^1.1.4",
+    "devvit": "0.13.4",
+    "typescript": "5.8.3",
+    "vite": "6.3.6",
+    "vitest": "^4.1.9"
+  }
+}

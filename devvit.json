@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "faction-warfare",
+  "post": {
+    "dir": "dist/client",
+    "entrypoints": {
+      "default": {
+        "entry": "index.html",
+        "height": "tall"
+      }
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "permissions": {
+    "redis": true,
+    "realtime": true,
+    "http": {
+      "fetch": {
+        "enabled": true,
+        "domains": ["api.datamuse.com"]
+      }
+    },
+    "reddit": {
+      "enable": true,
+      "scope": "moderator"
+    }
+  },
+  "menu": {
+    "items": [
+      {
+        "label": "Faction Warfare: launch a war room",
+        "description": "Create a new Faction Warfare post",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/post-create"
+      },
+      {
+        "label": "Faction Warfare: sanitize lore words",
+        "description": "Remove invalid or blocklisted words from the subreddit lore list",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/lore-sanitize"
+      },
+      {
+        "label": "Faction Warfare: delete my data",
+        "description": "Erase your personal Faction Warfare stats (GDPR)",
+        "location": "subreddit",
+        "forUserType": "user",
+        "endpoint": "/internal/menu/delete-data"
+      }
+    ]
+  },
+  "triggers": {
+    "onAppInstall": "/internal/triggers/lifecycle",
+    "onAppUpgrade": "/internal/triggers/lifecycle"
+  },
+  "scheduler": {
+    "tasks": {
+      "turn-tick": {
+        "endpoint": "/internal/cron/turn-tick",
+        "cron": "*/10 * * * *"
+      },
+      "word-pool-refresh": {
+        "endpoint": "/internal/cron/word-pool-refresh",
+        "cron": "0 3 * * 0"
+      }
+    }
+  },
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build"
+  },
+  "dev": {
+    "subreddit": "factionwarfare_dev"
+  }
+}

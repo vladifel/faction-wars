@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>viewport-check</title>
+    <link rel="stylesheet" href="../../src/client/styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <div class="screen warroom">
+        <header class="warroom__bar">
+          <div class="bar-score bar-score--red bar-score--active">
+            <span class="bar-score__n">8</span>
+            <span class="bar-score__tag">Red</span>
+          </div>
+          <div class="bar-center">
+            <span class="bar-center__time">5h 28m left</span>
+            <span class="bar-center__meta">T4 · Red move</span>
+          </div>
+          <div class="bar-score bar-score--blue">
+            <span class="bar-score__n">9</span>
+            <span class="bar-score__tag">Blue</span>
+          </div>
+          <button type="button" class="bar-cmd" aria-label="Command">⌘</button>
+        </header>
+        <div class="warroom__stage">
+          <div class="board" id="board"></div>
+        </div>
+        <div class="warroom__clue" style="--clue: #ff4500">
+          <span class="warroom__clue-label">CLUE</span>
+          <span class="warroom__clue-word">GTG</span>
+          <span class="warroom__clue-count">× 1</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      const words = [
+        'FORGE','BEACON','NEBULA','SHADOW','XENON','PRISM','DOCTRINE','CIPHER','VAULT','DELTA',
+        'ANCHOR','GLACIER','RAVEN','QUARTZ','TEMPO','HOLLOW','ZENITH','MIRAGE','BASALT','SIGNAL',
+        'VECTOR','OMEN','HARBOR','LUMEN','ECLIPSE',
+      ];
+      const board = document.getElementById('board');
+      for (const w of words) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tile tile--open';
+        b.innerHTML = '<span class="tile__word">' + w + '</span>';
+        board.append(b);
+      }
+      requestAnimationFrame(() => {
+        const m = {
+          innerW: window.innerWidth,
+          innerH: window.innerHeight,
+          scrollW: document.documentElement.scrollWidth,
+          scrollH: document.documentElement.scrollHeight,
+          bodyOverflow: getComputedStyle(document.body).overflow,
+          appOverflow: getComputedStyle(document.querySelector('.app')).overflow,
+          tileCount: document.querySelectorAll('.tile').length,
+          overlayCount: document.querySelectorAll('[class*="hud-overlay"]').length,
+        };
+        document.title = 'TRAP_METRICS:' + JSON.stringify(m);
+      });
+    </script>
+  </body>
+</html>
