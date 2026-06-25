@@ -97,6 +97,8 @@ export interface ClueInput {
   userId: string;
   word: string;
   count: number;
+  commentId?: string;
+  commentPermalink?: string;
 }
 
 /** Dispatch a coordinator clue for the active faction's turn. */
@@ -109,6 +111,8 @@ export async function dispatchClue(input: ClueInput): Promise<ClueResult> {
     faction,
     dispatchedBy: userId,
     dispatchedAt: Date.now(),
+    ...(input.commentId ? { commentId: input.commentId } : {}),
+    ...(input.commentPermalink ? { commentPermalink: input.commentPermalink } : {}),
   };
 
   await redis.set(keys.clue(season, turn), JSON.stringify(clue));

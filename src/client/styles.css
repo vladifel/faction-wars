@@ -641,8 +641,19 @@ body {
 }
 .pop-clue--inline {
   flex: 0 1 auto;
-  max-width: min(36vw, 160px);
+  max-width: min(42vw, 200px);
   justify-content: center;
+  pointer-events: auto;
+}
+.pop-clue__report {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nano-phosphor);
+  text-decoration: underline;
+  opacity: 0.9;
 }
 .pop-clue--inline .pop-clue__word {
   overflow: hidden;

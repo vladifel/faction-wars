@@ -35,6 +35,7 @@ import { isDevPlaytest } from '../devMode';
 import { redis } from '@devvit/web/server';
 import { buildSessionBundle, claimCommander, getCommander } from '../sessionService';
 import { resolveRetryNavigateUrl } from '../livePostService';
+import { publishClueComment } from '../ugcService';
 import { compileSnapshot, readSnapshot } from '../snapshotService';
 import { broadcastUpdate } from '../realtimeService';
 import {
@@ -335,6 +336,22 @@ api.post('/clue', async (c) => {
     );
   }
 
+  let published;
+  try {
+    published = await publishClueComment({
+      postId: b.postId,
+      word: word.value!,
+      count: Number(count.value),
+      faction,
+    });
+  } catch (err) {
+    console.error(`Failed to publish clue comment: ${err}`);
+    return c.json<ClueResponse>(
+      { success: false, error: 'Could not publish clue to Reddit. Try again.' },
+      502,
+    );
+  }
+
   await dispatchClue({
     season: b.season,
     turn: b.turn,
@@ -343,9 +360,19 @@ api.post('/clue', async (c) => {
     userId: b.userId,
     word: word.value!,
     count: Number(count.value),
+    commentId: published.commentId,
+    commentPermalink: published.commentPermalink,
   });
 
   const snapshot = await compileSnapshot({ season: b.season, turn: b.turn });
+  if (snapshot) {
+    await broadcastUpdate(b.postId, {
+      type: 'snapshot',
+      turn: b.turn,
+      versionHash: snapshot.versionHash,
+      snapshot,
+    });
+  }
   return c.json<ClueResponse>({ success: true, snapshot });
 });
 

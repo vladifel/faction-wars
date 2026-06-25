@@ -164,6 +164,10 @@ export interface ActiveClue {
   faction: VisualFaction;
   dispatchedBy: string;
   dispatchedAt: number;
+  /** Reddit comment id (t1_…) — clue text is reportable via normal comment tools. */
+  commentId?: string;
+  /** Permalink path for the clue comment on the war-room post. */
+  commentPermalink?: string;
 }
 
 // ---------------------------------------------------------------------------

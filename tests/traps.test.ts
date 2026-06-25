@@ -185,4 +185,10 @@ describe('trap: devvit manifest', () => {
     expect(icon.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))).toBe(true);
     expect(icon.length).toBeLessThan(500 * 1024);
   });
+
+  it('posts commander clues as attributable Reddit comments', () => {
+    expect(readFileSync(resolve('src/server/ugcService.ts'), 'utf8')).toContain("runAs: 'USER'");
+    expect(readFileSync(resolve('src/server/routes/api.ts'), 'utf8')).toContain('publishClueComment');
+    expect(warroomTs).toContain('pop-clue__report');
+  });
 });

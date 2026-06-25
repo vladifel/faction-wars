@@ -53,11 +53,23 @@ function renderHeader(props: ActiveWarroomProps): HTMLElement {
   ]);
 
   if (clue) {
-    const clueEl = popClueHud([
+    const clueParts = [
       el('span', { class: 'pop-clue__label' }, ['CLUE']),
       el('span', { class: 'pop-clue__word' }, [clue.word]),
       el('span', { class: 'pop-clue__count' }, [`× ${clue.count}`]),
-    ]);
+    ];
+    if (clue.commentPermalink) {
+      clueParts.push(
+        el('a', {
+          class: 'pop-clue__report',
+          href: `https://www.reddit.com${clue.commentPermalink}`,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          'aria-label': 'View clue comment on Reddit to report',
+        }, ['Report']),
+      );
+    }
+    const clueEl = popClueHud(clueParts);
     clueEl.classList.add('pop-clue--inline');
     center.insertBefore(clueEl, center.firstChild);
   }

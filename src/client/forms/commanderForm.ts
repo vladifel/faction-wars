@@ -5,7 +5,8 @@
 
 export const COMMANDER_CLUE_FORM = {
   title: 'SECRET X-RAY VISOR ON',
-  description: 'Lock in a clue for your faction. One word. One number. No mercy.',
+  description:
+    'Lock in a clue for your faction. Posted as a comment on this war room under your username (reportable via Reddit).',
   wordLabel: 'CLUE WORD',
   wordPlaceholder: 'E.G. FRUIT',
   countLabel: 'TILE COUNT',

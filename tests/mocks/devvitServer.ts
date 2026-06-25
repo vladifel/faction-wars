@@ -171,6 +171,17 @@ interface FakeUser {
 
 const users = new Map<string, FakeUser>();
 let postCounter = 0;
+let commentCounter = 0;
+
+export type MockClueComment = {
+  id: string;
+  postId: string;
+  text: string;
+  runAs?: string;
+  permalink: string;
+};
+
+let lastClueComment: MockClueComment | undefined;
 
 /** Default account: old + plenty of karma => clears the trust gate. */
 function defaultUser(): FakeUser {
@@ -195,6 +206,24 @@ export const reddit = {
   async submitCustomPost(_opts: unknown): Promise<{ id: string }> {
     postCounter += 1;
     return { id: `t3_post${postCounter}` };
+  },
+  async submitComment(opts: {
+    id: string;
+    text: string;
+    runAs?: string;
+  }): Promise<{ id: string; permalink: string }> {
+    commentCounter += 1;
+    const id = `t1_comment${commentCounter}`;
+    const slug = opts.id.replace(/^t3_/, '');
+    const permalink = `/r/${context.subredditName ?? 'test'}/comments/${slug}/faction_warfare/${id}/`;
+    lastClueComment = {
+      id,
+      postId: opts.id,
+      text: opts.text,
+      runAs: opts.runAs,
+      permalink,
+    };
+    return { id, permalink };
   },
   async getCurrentUsername(): Promise<string | undefined> {
     return context.userId ? `user_${context.userId}` : undefined;
@@ -241,6 +270,8 @@ export const __test = {
     users.clear();
     sent.length = 0;
     postCounter = 0;
+    commentCounter = 0;
+    lastClueComment = undefined;
     context.subredditId = 't5_sub';
     context.postId = 't3_post0';
     context.userId = undefined;
@@ -256,6 +287,9 @@ export const __test = {
   },
   sentMessages(): SentMessage[] {
     return sent;
+  },
+  get lastClueComment(): MockClueComment | undefined {
+    return lastClueComment;
   },
   store,
 };

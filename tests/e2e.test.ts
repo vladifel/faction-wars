@@ -179,7 +179,13 @@ describe('full game flow over /api', () => {
     asUser(commander);
     await post<ClaimCommanderResponse>('/claim-commander');
     const words = boot.snapshot!.tiles.map((t) => t.word);
-    await post<ClueResponse>('/clue', { word: pickSafeClue(words), count: 2 });
+    const clueWord = pickSafeClue(words);
+    const clueRes = await post<ClueResponse>('/clue', { word: clueWord, count: 2 });
+    expect(clueRes.body.success).toBe(true);
+    expect(__test.lastClueComment?.runAs).toBe('USER');
+    expect(__test.lastClueComment?.text).toContain(clueWord);
+    expect(clueRes.body.snapshot?.activeClue?.commentId).toMatch(/^t1_/);
+    expect(clueRes.body.snapshot?.activeClue?.commentPermalink).toContain('/comments/');
 
     asUser(voter);
     const veto = await post<VetoResponse>('/veto');
