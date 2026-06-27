@@ -1,6 +1,6 @@
 # Faction Warfare
 
-![Faction Warfare — async tactical word voting on Reddit](assets/icon-source.png)
+![Faction Warfare — async tactical word voting on Reddit](https://raw.githubusercontent.com/vladifel/faction-wars/main/assets/icon-source.png)
 
 Asynchronous, massively-multiplayer Codenames-style tactical voting for Reddit — built on [Devvit Web](https://developers.reddit.com).
 
