@@ -1,6 +1,10 @@
 # Faction Warfare
 
+![Faction Warfare — async tactical word voting on Reddit](assets/icon-source.png)
+
 Asynchronous, massively-multiplayer Codenames-style tactical voting for Reddit — built on [Devvit Web](https://developers.reddit.com).
+
+**Live on Reddit:** [r/NanoArcade](https://www.reddit.com/r/nanoarcade/) · [App listing](https://developers.reddit.com/apps/faction-warfare)
 
 Two factions compete turn-by-turn on a shared 5×5 board. Players vote on tiles; the community aggregate drives each flip. State lives in Devvit Redis; the client polls snapshots and listens on realtime channels.
 
